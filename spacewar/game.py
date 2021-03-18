@@ -1,7 +1,6 @@
 import turtle
 import os
 import math as m
-import gc
 
 # region Prepair screen
 
