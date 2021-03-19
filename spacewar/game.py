@@ -1,7 +1,6 @@
 import turtle
 import os
 import math as m
-import gc
 
 # region Prepair screen
 
@@ -60,7 +59,7 @@ for alien in aliens:
         countAlien = 0
 
 
-alien_speed = 0.5
+alienSpeed = 0.5
 
 # endregion
 
@@ -71,7 +70,7 @@ player.penup()
 player.speed(0)
 player.setposition(0, -250)
 
-player_speed = 15
+playerSpeed = 15
 # endregion
 
 # region Bullet
@@ -82,54 +81,11 @@ bullet.penup()
 bullet.shapesize(.3, .6)
 bullet.speed(0)
 bullet.setheading(90)
+bullet.setposition(0, -1000)
 bullet.hideturtle()
-bullet_status = "ready"
+bulletStatus = "ready"
 
-bullet_speed = 7
-# endregion
-
-# region Function
-
-
-def move_left():
-    x = player.xcor() - player_speed
-    if x < -280:
-        x = -280
-    player.setx(x)
-
-
-def move_right():
-    x = player.xcor() + player_speed
-    if x > 280:
-        x = 280
-    player.setx(x)
-
-
-def fire():
-    global bullet_status
-    if bullet_status == "ready":
-        bullet_status = "fired"
-        x = player.xcor()
-        y = player.ycor()+10
-        bullet.setposition(x, y)
-        bullet.showturtle()
-
-
-def isCollision(obj1, obj2):
-    distance = m.sqrt(m.pow(obj1.xcor()-obj2.xcor(), 2) +
-                      m.pow(obj1.ycor()-obj2.ycor(), 2))
-    if distance < 20:
-        return True
-    return False
-
-# endregion
-
-
-# region Keyboard blinding
-turtle.listen()
-turtle.onkeypress(move_left, ("Left"))
-turtle.onkeypress(move_right, ("Right"))
-turtle.onkey(fire, ("space"))
+bulletSpeed = 7
 # endregion
 
 # region score
@@ -144,13 +100,79 @@ scorePen.write(scoreString, False, align="left", font=("Times", 14, "normal"))
 scorePen.hideturtle()
 # endregion
 
+# region game stats
+gamePen = turtle.Turtle()
+gamePen.speed(0)
+gamePen.color("white")
+gamePen.penup()
+gamePen.setposition(0, 0)
+gamePen.hideturtle()
+# endregion
+
+# region Function
+
+
+def moveLeft():
+    x = player.xcor() - playerSpeed
+    if x < -280:
+        x = -280
+    player.setx(x)
+
+
+def moveRight():
+    x = player.xcor() + playerSpeed
+    if x > 280:
+        x = 280
+    player.setx(x)
+
+
+def fire():
+    global bulletStatus
+    if bulletStatus == "ready":
+        bulletStatus = "fired"
+        x = player.xcor()
+        y = player.ycor()+10
+        bullet.setposition(x, y)
+        bullet.showturtle()
+
+
+def isCollision(obj1, obj2):
+    distance = m.sqrt(m.pow(obj1.xcor()-obj2.xcor(), 2) +
+                      m.pow(obj1.ycor()-obj2.ycor(), 2))
+    if distance < 20:
+        return True
+    return False
+
+
+def win(msg, score):
+    winmsg = "Congratulation!!!\n All alien defeated\n Your score is {}".format(
+        score)
+    msg.write(winmsg, False, align="center", font=("Times", 20, "normal"))
+    msg.showturtle()
+
+
+def lose(msg, score):
+    losemsg = "Game over mate!!!\n Your score is {}".format(score)
+    msg.write(losemsg, False, align="center", font=("Times", 20, "normal"))
+    msg.showturtle()
+# endregion
+
+
+# region Keyboard blinding
+turtle.listen()
+turtle.onkeypress(moveLeft, ("Left"))
+turtle.onkeypress(moveRight, ("Right"))
+turtle.onkey(fire, ("space"))
+# endregion
+
 # region Main loop
-while True:
+isRunning = True
+while noAliens > 0 and isRunning:
     screen.update()
 
     # Move all alien
     for alien in aliens:
-        x = alien.xcor()+alien_speed
+        x = alien.xcor()+alienSpeed
         alien.setx(x)
 
         if alien.xcor() == 280 or alien.xcor() == -280:
@@ -158,39 +180,46 @@ while True:
             for alien in aliens:
                 alien.sety(alien.ycor()-40)
             # Change direction
-            alien_speed *= -1
+            alienSpeed *= -1
 
         # Check collision btw bullet and alien
         if isCollision(bullet, alien):
-            #Reset bullet
+            # Reset bullet
             bullet.hideturtle()
             bullet.sety(285)
-            #Delete alien
+            # Delete alien
             alien.hideturtle()
-            alien.setposition(-2000,2000)
+            alien.setposition(-2000, 2000)
             noAliens -= 1
-            #Update score
+            # Update score
             score += 10
             scoreString = "Score: %s" % score
             scorePen.clear()
             scorePen.write(scoreString, False, align="left",
                            font=("Times", 14, "normal"))
 
-        # Check collision btw bullet and alien
+        # Check collision btw player and alien
         if isCollision(player, alien):
-            bullet.hideturtle()
-            alien.hideturtle()
-            print('Game over')
+            isRunning = False
             break
+    # Break the game loop
+    if isRunning == False:
+        break
 
     # Move bullet
-    if bullet_status == "fired":
-        y = bullet.ycor()+bullet_speed
+    if bulletStatus == "fired":
+        y = bullet.ycor()+bulletSpeed
         bullet.sety(y)
     # Check bullet is inside screen ?
     if bullet.ycor() > 275:
-        bullet_status = "ready"
+        bulletStatus = "ready"
         bullet.hideturtle()
+
+# Notification result
+if noAliens == 0:
+    win(gamePen, score)
+else:
+    lose(gamePen, score)
 
 screen.mainloop()
 # endregion
