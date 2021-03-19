@@ -1,5 +1,4 @@
 import turtle
-import os
 import math as m
 
 # region Prepair screen
